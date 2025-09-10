@@ -11,12 +11,12 @@ import sys
 import os
 
 try:
-    import pytest  # ✅ Optional: only needed for CI/CD
+    import pytest
 except ImportError:
     pytest = None
 
 
-def get_driver(headless=True):
+def get_driver(headless=False):
     options = Options()
     options.add_argument("--start-maximized")
 
@@ -25,9 +25,13 @@ def get_driver(headless=True):
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-    # ✅ Only use user-data-dir when running locally, not in GitHub Actions
+    # ✅ Use custom user-data-dir only when running locally
     if not os.getenv("GITHUB_ACTIONS"):
         options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")
+    else:
+        # ✅ In CI/CD: force clean guest session to avoid conflicts
+        options.add_argument("--guest")
+        options.add_argument("--incognito")
 
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
@@ -52,6 +56,5 @@ def test_openhome_login(headless=False):
 
 
 if __name__ == "__main__":
-    # ✅ Detect headless mode from CLI flag
     headless = "--headless" in sys.argv or bool(os.getenv("GITHUB_ACTIONS"))
     test_openhome_login(headless=headless)
