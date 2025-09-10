@@ -11,12 +11,12 @@ import sys
 import os
 
 try:
-    import pytest  # ✅ Only used in GitHub Actions
+    import pytest  # ✅ Optional: only needed for CI/CD
 except ImportError:
     pytest = None
 
 
-def get_driver(headless=False):
+def get_driver(headless=True):
     options = Options()
     options.add_argument("--start-maximized")
 
@@ -25,7 +25,7 @@ def get_driver(headless=False):
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-    # 🚨 FIX: skip user-data-dir on GitHub Actions (causing "session not created")
+    # ✅ Only use user-data-dir when running locally, not in GitHub Actions
     if not os.getenv("GITHUB_ACTIONS"):
         options.add_argument(f"--user-data-dir={tempfile.mkdtemp()}")
 
@@ -52,6 +52,6 @@ def test_openhome_login(headless=False):
 
 
 if __name__ == "__main__":
-    # ✅ Detect mode
+    # ✅ Detect headless mode from CLI flag
     headless = "--headless" in sys.argv or bool(os.getenv("GITHUB_ACTIONS"))
     test_openhome_login(headless=headless)
