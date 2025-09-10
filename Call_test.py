@@ -1,7 +1,6 @@
 # Call_test.py
 
 import os
-import tempfile
 import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -19,13 +18,9 @@ def get_driver(headless=False):
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-    # ✅ Only use temp profile locally (never in CI/CD)
-    if os.getenv("GITHUB_ACTIONS"):
-        options.add_argument("--guest")
-        options.add_argument("--incognito")
-    else:
-        temp_profile = tempfile.mkdtemp()
-        options.add_argument(f"--user-data-dir={temp_profile}")
+    # ✅ Always run without user-data-dir to avoid conflicts
+    options.add_argument("--incognito")
+    options.add_argument("--guest")
 
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
