@@ -1,15 +1,15 @@
 # Call_test.py
 
-import os
-import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
+import time
+import os
 
 
-def get_driver(headless=False):
+def get_driver(headless=False, ci_mode=False):
     options = Options()
     options.add_argument("--start-maximized")
 
@@ -18,9 +18,9 @@ def get_driver(headless=False):
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
 
-    # ✅ Always run without user-data-dir to avoid conflicts
-    options.add_argument("--incognito")
-    options.add_argument("--guest")
+    if not ci_mode:  
+        # ✅ Local run only (GUI mode, user profile)
+        options.add_argument("--incognito")
 
     service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=service, options=options)
@@ -28,8 +28,11 @@ def get_driver(headless=False):
     return driver
 
 
-def test_openhome_login(headless=False):
-    driver = get_driver(headless=headless)
+def test_openhome_login():
+    # Detect if running in GitHub Actions
+    ci_mode = os.getenv("GITHUB_ACTIONS") == "true"
+
+    driver = get_driver(headless=ci_mode, ci_mode=ci_mode)
     try:
         driver.get("https://app.openhome.xyz")
 
@@ -45,6 +48,4 @@ def test_openhome_login(headless=False):
 
 
 if __name__ == "__main__":
-    # 🔹 Run headless in CI/CD, GUI locally
-    headless = bool(os.getenv("GITHUB_ACTIONS"))
-    test_openhome_login(headless=headless)
+    test_openhome_login()
